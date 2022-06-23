@@ -59,16 +59,16 @@ def get_position():
 
 def data_scrape():
     global stock_data
-    stock_data = api.get_bars(stock_choice, TimeFrame.Minute).df
+    stock_data = api.get_bars(stock_choice, TimeFrame.Day, limit=100).df
 
 # Calculation of simple moving averages
 
 def sma_indicator():
     data_scrape()
-    stock_data["sma_5"] = stock_data["close"].rolling(window=5, min_periods=1).mean()
-    stock_data["sma_13"] = stock_data["close"].rolling(window=13, min_periods=1).mean()
+    stock_data["sma_10"] = stock_data["close"].rolling(window=10, min_periods=1).mean()
+    stock_data["sma_20"] = stock_data["close"].rolling(window=20, min_periods=1).mean()
 
-    if np.where(stock_data["sma_5"] > stock_data["sma_13"]):
+    if np.where(stock_data["sma_10"] > stock_data["sma_20"]):
         indicator = 1
 
     else:
@@ -81,6 +81,8 @@ def sma_indicator():
 
 while market_open < current_time < last_call:
     time_check()
+    get_position()
+    sma_indicator()
     if sma_indicator() == 1 and get_position() == 0:
         execute_buy_order = api.submit_order(stock_choice, 1, "buy", "market", "gtc")
         print(execute_buy_order)
@@ -96,7 +98,7 @@ while market_open < current_time < last_call:
     else:
         execute_sell_order = api.submit_order(stock_choice, 1, "sell", "market", "gtc")
         print(execute_sell_order)
-        print("You have sold 1 {} position./nYou now have 0 open {} positions.".format(stock_choice, stock_choice))
+        print("You have sold 1 {} position.\nYou now have 0 open {} positions.".format(stock_choice, stock_choice))
         print("Time check: {} \n-----------------------------------------------------------".format(current_time))
 
 
@@ -112,7 +114,6 @@ if last_call < current_time < market_close:
     print("Taurus is shutting down and has liquidated all {} positions.\n".format(stock_choice))
     print("Time check: {}\n".format(time_check()))
     print("-----------------------------------------------------------")
-
 
 
 
